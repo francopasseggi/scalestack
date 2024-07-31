@@ -1,9 +1,11 @@
 from django.contrib.auth.models import User
 from rest_framework import generics, permissions
 from rest_framework_simplejwt.views import TokenObtainPairView
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from .models import Book, Review
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from drf_spectacular.types import OpenApiTypes
+from .models import Review
 from .serializers import UserSerializer, MyTokenObtainPairSerializer, ReviewSerializer
+from .paginators import StandardResultsSetPagination
 
 
 class RegisterView(generics.CreateAPIView):
@@ -50,11 +52,33 @@ class AddReviewView(generics.CreateAPIView):
 class GetBookReviewsView(generics.ListAPIView):
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
 
     @extend_schema(
         summary="Get reviews for a book",
-        description="Retrieve all reviews for a book by its ISBN. Requires authentication.",
-        responses={200: ReviewSerializer(many=True), 404: None},
+        description="Retrieve all reviews for a book by its ISBN. Requires authentication. Results are paginated.",
+        parameters=[
+            OpenApiParameter(
+                name="page", description="Page number", required=False, type=int
+            ),
+            OpenApiParameter(
+                name="page_size",
+                description="Number of results per page",
+                required=False,
+                type=int,
+            ),
+        ],
+        responses={
+            200: inline_serializer(
+                name="PaginatedReviewResponse",
+                fields={
+                    "count": OpenApiTypes.INT,
+                    "next": OpenApiTypes.URI,
+                    "previous": OpenApiTypes.URI,
+                    "results": ReviewSerializer(many=True),
+                },
+            )
+        },
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
