@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, exceptions
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Review, Book
@@ -46,8 +46,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "user", "book", "created_at")
 
     def create(self, validated_data):
-        isbn = validated_data.pop("isbn")
-        book, _ = Book.objects.get_or_create(isbn=isbn)
-        user = self.context["request"].user
-        review = Review.objects.create(user=user, book=book, **validated_data)
-        return review
+        try:
+            isbn = validated_data.pop("isbn")
+            book = Book.objects.get(isbn=isbn)
+            user = self.context["request"].user
+            review = Review.objects.create(user=user, book=book, **validated_data)
+            return review
+        except Book.DoesNotExist:
+            raise exceptions.ValidationError(
+                {"isbn": f"Book with ISBN {isbn} does not exist in our database."}
+            )

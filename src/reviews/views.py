@@ -43,7 +43,9 @@ class AddReviewView(generics.CreateAPIView):
         summary="Add a new book review",
         description="Create a new review for a book. Requires authentication.",
         request=ReviewSerializer,
-        responses={201: ReviewSerializer},
+        responses={
+            201: ReviewSerializer,
+        },
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
