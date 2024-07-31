@@ -5,3 +5,4 @@ ruff
 pytest
 pytest-django
 django-extensions  # For shell_plus
+djangorestframework-simplejwt
