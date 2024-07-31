@@ -1,6 +1,5 @@
 from rest_framework import serializers, exceptions
 from django.contrib.auth.models import User
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Review, Book
 
 
@@ -21,18 +20,18 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token["username"] = user.username
-        return token
-
-
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = ("isbn",)
+
+
+class BookInformationSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    author = serializers.CharField()
+    isbn = serializers.CharField()
+    first_publish_year = serializers.IntegerField()
+    first_sentence = serializers.CharField()
 
 
 class ReviewSerializer(serializers.ModelSerializer):

@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView
 from reviews.views import (
     RegisterView,
-    MyTokenObtainPairView,
     AddReviewView,
     GetBookReviewsView,
+    GetBookInformationView,
 )
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -22,10 +23,11 @@ urlpatterns = [
     ),
     path("admin/", admin.site.urls),
     path("api/register/", RegisterView.as_view(), name="register"),
-    path("api/token/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/reviews/", AddReviewView.as_view(), name="add_review"),
     path(
         "api/reviews/<str:isbn>/", GetBookReviewsView.as_view(), name="get_book_reviews"
     ),
+    path("api/book-info/", GetBookInformationView.as_view(), name="get_book_info"),
 ]

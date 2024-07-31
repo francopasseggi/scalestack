@@ -1,11 +1,25 @@
 from django.contrib.auth.models import User
 from rest_framework import generics, permissions
-from rest_framework_simplejwt.views import TokenObtainPairView
-from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiParameter,
+    inline_serializer,
+    OpenApiResponse,
+)
+
 from drf_spectacular.types import OpenApiTypes
 from .models import Review
-from .serializers import UserSerializer, MyTokenObtainPairSerializer, ReviewSerializer
+from .serializers import (
+    BookInformationSerializer,
+    UserSerializer,
+    ReviewSerializer,
+)
 from .paginators import StandardResultsSetPagination
+from rest_framework import status
+from rest_framework.response import Response
+from botocore.exceptions import ClientError, NoRegionError, NoAuthTokenError
+import boto3
+import json
 
 
 class RegisterView(generics.CreateAPIView):
@@ -13,23 +27,6 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserSerializer
 
-    @extend_schema(
-        summary="Register a new user",
-        description="Create a new user account with username, email, and password.",
-        responses={201: UserSerializer},
-    )
-    def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
-
-
-class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
-
-    @extend_schema(
-        summary="Obtain JWT token",
-        description="Authenticate user and return JWT token pair.",
-        responses={200: MyTokenObtainPairSerializer},
-    )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -39,14 +36,6 @@ class AddReviewView(generics.CreateAPIView):
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @extend_schema(
-        summary="Add a new book review",
-        description="Create a new review for a book. Requires authentication.",
-        request=ReviewSerializer,
-        responses={
-            201: ReviewSerializer,
-        },
-    )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -57,8 +46,6 @@ class GetBookReviewsView(generics.ListAPIView):
     pagination_class = StandardResultsSetPagination
 
     @extend_schema(
-        summary="Get reviews for a book",
-        description="Retrieve all reviews for a book by its ISBN. Requires authentication. Results are paginated.",
         parameters=[
             OpenApiParameter(
                 name="page", description="Page number", required=False, type=int
@@ -88,3 +75,51 @@ class GetBookReviewsView(generics.ListAPIView):
     def get_queryset(self):
         isbn = self.kwargs["isbn"]
         return Review.objects.filter(book__isbn=isbn)
+
+
+class GetBookInformationView(generics.RetrieveAPIView):
+    serializer_class = BookInformationSerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="isbn", description="ISBN of the book", required=True, type=str
+            ),
+        ],
+        responses={
+            200: BookInformationSerializer,
+            400: OpenApiResponse(description="ISBN is required"),
+            500: OpenApiResponse(description="Internal server error"),
+        },
+    )
+    def get(self, request, *args, **kwargs):
+        isbn = request.query_params.get("isbn")
+        if not isbn:
+            return Response(
+                {"error": "ISBN is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            lambda_client = boto3.client("lambda")
+            response = lambda_client.invoke(
+                FunctionName="fetch-book-info-lambda",
+                InvocationType="RequestResponse",
+                Payload=json.dumps({"isbn": isbn}),
+            )
+
+            payload = json.loads(response["Payload"].read().decode("utf-8"))
+
+            if "statusCode" in payload and payload["statusCode"] != 200:
+                return Response(payload["body"], status=payload["statusCode"])
+
+            return Response(payload["body"], status=status.HTTP_200_OK)
+
+        except (ClientError, NoRegionError, NoAuthTokenError) as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            return Response(
+                {"error": "Internal Server Error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

@@ -1,9 +1,12 @@
+import json
 import pytest
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 from rest_framework import status
 from reviews.models import Book, Review
 from django.urls import reverse
+
+from unittest.mock import patch, Mock
 
 
 @pytest.fixture(scope="session")
@@ -107,3 +110,86 @@ class TestBookReviewAPI:
         url = reverse("get_book_reviews", kwargs={"isbn": book.isbn})
         response = api_client.get(url)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+class TestBookInformationAPI:
+    @pytest.fixture
+    def mock_lambda_client(self):
+        with patch("boto3.client") as mock_client:
+            yield mock_client
+
+    def test_get_book_information_success(
+        self, authenticated_client, mock_lambda_client
+    ):
+        mock_lambda_response = {
+            "StatusCode": 200,
+            "Payload": Mock(
+                read=Mock(
+                    return_value=json.dumps(
+                        {
+                            "statusCode": 200,
+                            "body": {
+                                "title": "Test Book",
+                                "author": "Test Author",
+                                "first_publish_year": 2020,
+                                "first_sentence": "It was a dark and stormy night.",
+                            },
+                        }
+                    ).encode("utf-8")
+                )
+            ),
+        }
+        mock_lambda_client.return_value.invoke.return_value = mock_lambda_response
+
+        url = reverse("get_book_info")
+        response = authenticated_client.get(url, {"isbn": "1234567890"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == {
+            "title": "Test Book",
+            "author": "Test Author",
+            "first_publish_year": 2020,
+            "first_sentence": "It was a dark and stormy night.",
+        }
+
+    def test_get_book_information_not_found(
+        self, authenticated_client, mock_lambda_client
+    ):
+        mock_lambda_response = {
+            "StatusCode": 200,
+            "Payload": Mock(
+                read=Mock(
+                    return_value=json.dumps(
+                        {"statusCode": 404, "body": {"error": "Book not found"}}
+                    ).encode("utf-8")
+                )
+            ),
+        }
+        mock_lambda_client.return_value.invoke.return_value = mock_lambda_response
+
+        url = reverse("get_book_info")
+        response = authenticated_client.get(url, {"isbn": "0000000000"})
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.data == {"error": "Book not found"}
+
+    def test_get_book_information_no_isbn(self, authenticated_client):
+        url = reverse("get_book_info")
+        response = authenticated_client.get(url)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in response.data
+
+    def test_get_book_information_lambda_error(
+        self, authenticated_client, mock_lambda_client
+    ):
+        mock_lambda_client.return_value.invoke.side_effect = Exception(
+            "Lambda invocation failed"
+        )
+
+        url = reverse("get_book_info")
+        response = authenticated_client.get(url, {"isbn": "1234567890"})
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert "error" in response.data
