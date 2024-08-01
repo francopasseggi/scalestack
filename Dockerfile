@@ -10,4 +10,4 @@ RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
 COPY src /api/src
 
 WORKDIR /api
-CMD ["python", "src/manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "core.wsgi"]
