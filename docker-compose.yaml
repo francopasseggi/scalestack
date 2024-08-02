@@ -6,7 +6,7 @@ volumes:
 
 services:
   api:
-    container_name: api
+    container_name: scalestack-api
     restart: always
     build: .
     depends_on:
@@ -21,7 +21,7 @@ services:
 
   db:
     image: postgres:14.4
-    container_name: db
+    container_name: scalestack-db
     restart: always
     expose:
       - 5432
