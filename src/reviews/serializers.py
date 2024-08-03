@@ -29,9 +29,8 @@ class BookSerializer(serializers.ModelSerializer):
 class BookInformationSerializer(serializers.Serializer):
     title = serializers.CharField()
     author = serializers.CharField()
-    isbn = serializers.CharField()
-    first_publish_year = serializers.IntegerField()
-    first_sentence = serializers.CharField()
+    publish_date = serializers.IntegerField()
+    description = serializers.CharField()
 
 
 class ReviewSerializer(serializers.ModelSerializer):

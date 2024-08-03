@@ -4,7 +4,6 @@ psycopg2
 ruff
 pytest
 pytest-django
-django-extensions  # For shell_plus
 djangorestframework-simplejwt
 boto3
 gunicorn

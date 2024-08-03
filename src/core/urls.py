@@ -15,9 +15,9 @@ from drf_spectacular.views import (
 
 urlpatterns = [
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    # Optional UI:
+    # Open API UI, to easily test the API. This is only available in development.
     path(
-        "api/docs/",
+        "",
         SpectacularSwaggerView.as_view(url_name="schema"),
         name="swagger-ui",
     ),

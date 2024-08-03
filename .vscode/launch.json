@@ -15,34 +15,5 @@
             "django": true,
             "program": "${workspaceFolder}/src/manage.py"
         },
-        {
-            "name": "Celery",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "celery",
-            "cwd": "${workspaceFolder}/src",
-            "envFile": "${workspaceFolder}/.env",
-            "args": [
-                "-A",
-                "core",
-                "worker",
-                "-l",
-                "debug",
-                "-Q",
-                "sublime",
-                "--pool=solo",
-                "--concurrency=1",
-            ],
-            "justMyCode": false
-        },
     ],
-    "compounds": [
-        {
-            "name": "Celery and Django",
-            "configurations": [
-                "Celery",
-                "Django"
-            ]
-        },
-    ]
 }
