@@ -40,3 +40,7 @@ shell: setup
 
 index: setup
 	python src/manage.py search_index --create
+
+
+lambda: setup
+	curl "http://books-lambda:8080/2015-03-31/functions/function/invocations" -d '{"isbn":"9780141439587"}'

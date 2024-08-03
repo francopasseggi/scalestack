@@ -132,8 +132,8 @@ class TestBookInformationAPI:
                             "body": {
                                 "title": "Test Book",
                                 "author": "Test Author",
-                                "first_publish_year": 2020,
-                                "first_sentence": "It was a dark and stormy night.",
+                                "publish_date": 2020,
+                                "description": "Unknown",
                             },
                         }
                     ).encode("utf-8")
@@ -149,8 +149,8 @@ class TestBookInformationAPI:
         assert response.data == {
             "title": "Test Book",
             "author": "Test Author",
-            "first_publish_year": 2020,
-            "first_sentence": "It was a dark and stormy night.",
+            "publish_date": 2020,
+            "description": "Unknown",
         }
 
     def test_get_book_information_not_found(

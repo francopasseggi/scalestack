@@ -15,11 +15,10 @@ from .serializers import (
     ReviewSerializer,
 )
 from .paginators import StandardResultsSetPagination
+from .services import get_book_info
 from rest_framework import status
 from rest_framework.response import Response
-from botocore.exceptions import ClientError, NoRegionError, NoAuthTokenError
-import boto3
-import json
+from botocore.exceptions import ClientError
 
 
 class RegisterView(generics.CreateAPIView):
@@ -89,6 +88,7 @@ class GetBookInformationView(generics.RetrieveAPIView):
         responses={
             200: BookInformationSerializer,
             400: OpenApiResponse(description="ISBN is required"),
+            404: OpenApiResponse(description="Book not found"),
             500: OpenApiResponse(description="Internal server error"),
         },
     )
@@ -100,25 +100,18 @@ class GetBookInformationView(generics.RetrieveAPIView):
             )
 
         try:
-            lambda_client = boto3.client("lambda")
-            response = lambda_client.invoke(
-                FunctionName="fetch-book-info-lambda",
-                InvocationType="RequestResponse",
-                Payload=json.dumps({"isbn": isbn}),
-            )
-
-            payload = json.loads(response["Payload"].read().decode("utf-8"))
+            payload = get_book_info(isbn)
 
             if "statusCode" in payload and payload["statusCode"] != 200:
                 return Response(payload["body"], status=payload["statusCode"])
 
             return Response(payload["body"], status=status.HTTP_200_OK)
 
-        except (ClientError, NoRegionError, NoAuthTokenError) as e:
+        except ClientError as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        except Exception as e:
+        except Exception:
             return Response(
                 {"error": "Internal Server Error"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

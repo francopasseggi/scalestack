@@ -29,3 +29,13 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - .env
+
+  books-lambda:
+    container_name: scalestack-lambda
+    restart: always
+    build:
+      context: ./lambda
+      dockerfile: Dockerfile
+    expose:
+      - 8080
+    working_dir: /books-lambda
