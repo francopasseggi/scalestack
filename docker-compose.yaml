@@ -15,7 +15,6 @@ services:
       - "8000:8000"
     volumes:
       - .:/api:cached
-    working_dir: /api
     env_file:
       - .env
 

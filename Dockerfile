@@ -9,7 +9,8 @@ RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
 
 COPY src /api/src
 
-WORKDIR /api
+WORKDIR /api/src
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "core.wsgi"]
-EXPOSE 8000
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", \
+    "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info", \
+    "--access-logformat", "%(t)s \"%(r)s\" %(s)s %(L)s", "core.wsgi"]

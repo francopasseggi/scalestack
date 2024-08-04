@@ -1,4 +1,4 @@
-# Instructions to run project
+# Instructions to run project locally
 
 1. Crete a .env file at the root dir with the following variables
 
@@ -7,13 +7,12 @@
 DJANGO_SECRET_KEY
 DJANGO_DEBUG
 DJANGO_ALLOWED_HOSTS
-DATABASE_URL=postgres://<POSTGRES_USER>:<POSTGRES_PASSWORD>@<POSTGRES_HOST>:<POSTGRES_PORT>/<POSTGRES_DB>
+DATABASE_URL=postgres://<POSTGRES_USER>:<POSTGRES_PASSWORD>@db:<POSTGRES_PORT>/<POSTGRES_DB>
 
 # For the db container
 POSTGRES_USER
 POSTGRES_PASSWORD
 POSTGRES_DB
-POSTGRES_HOST
 POSTGRES_PORT
 
 # AWS Configuration
