@@ -1,6 +1,6 @@
 djangorestframework
 drf-spectacular
-psycopg2
+psycopg2-binary
 ruff
 pytest
 pytest-django
