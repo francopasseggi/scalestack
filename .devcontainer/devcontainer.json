@@ -7,7 +7,7 @@
 	"service": "api",
 	"workspaceFolder": "/api",
 	// Run commands after the container is created. We avoid rebuilding the image when requirements.txt changes (for dev).
-	"postCreateCommand": " cd /api && pip3 install --user -r requirements.txt",
+	"postCreateCommand": " cd /api && pip3 install --user -r src/requirements.txt",
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {

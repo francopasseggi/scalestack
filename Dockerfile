@@ -4,12 +4,11 @@ FROM python:3.12-bullseye
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
-    pip install --requirement /tmp/requirements.txt
-
 COPY src /api/src
 
 WORKDIR /api/src
+
+RUN pip install -r requirements.txt
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", \
     "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info", \
